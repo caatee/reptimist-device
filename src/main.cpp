@@ -17,6 +17,8 @@ DallasTemperature ds18b20(&oneWire);
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
+unsigned long previousMillis = 0;
+
 void feedStatus() {
   float h = dht.readHumidity();
   float t = dht.readTemperature(true); // read in Fahrenheit
@@ -128,7 +130,6 @@ void commandHandler(char* topic, byte* payload, unsigned int length) {
 
     } else {
       Serial.println("Unknown command.");
-
     }
   } else {
     Serial.println("No command found in payload.");
@@ -180,11 +181,15 @@ void setup() {
 }
 
 void loop() {
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillis >= LOOP_INTERVAL) {
+    previousMillis = currentMillis;
+    feedStatus();
+  }
+
   if (!mqttClient.connected()) {
     connectToMQTT();
   }
   mqttClient.loop();
-  feedStatus();
-
-  delay(2000);
 }
