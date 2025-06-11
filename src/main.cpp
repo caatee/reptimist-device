@@ -20,10 +20,10 @@ PubSubClient mqttClient(espClient);
 unsigned long previousMillis = 0;
 
 void feedStatus() {
-  float h = dht.readHumidity();
-  float t = dht.readTemperature(true); // read in Fahrenheit
+  const float h = dht.readHumidity();
+  const float t = dht.readTemperature(true); // read in Fahrenheit
   ds18b20.requestTemperatures();
-  float tempF = ds18b20.getTempFByIndex(0);
+  const float tempF = ds18b20.getTempFByIndex(0);
 
   if (isnan(h) || isnan(t)) {
     Serial.println("Failed to read from DHT sensor!");
@@ -63,7 +63,7 @@ void initializeWiFi() {
   }
 }
 
-void commandHandler(char* topic, byte* payload, unsigned int length) {
+void commandHandler(const char* topic, const byte* payload, const unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("]: ");
@@ -78,7 +78,7 @@ void commandHandler(char* topic, byte* payload, unsigned int length) {
 
   String truePayload = "";
   for (unsigned int i = 0; i < length; i++) { // ??? what the fuck
-    truePayload += (char)payload[i]; 
+    truePayload += static_cast<char>(payload[i]);
   }
   truePayload.trim();
   Serial.print("Payload: ");
@@ -86,7 +86,7 @@ void commandHandler(char* topic, byte* payload, unsigned int length) {
 
   // parse as JSON object
   JsonDocument doc;
-  DeserializationError error = deserializeJson(doc, truePayload);
+  const DeserializationError error = deserializeJson(doc, truePayload);
   if (error) {
     Serial.print("bad payload: ");
     Serial.println(error.c_str());
@@ -94,7 +94,7 @@ void commandHandler(char* topic, byte* payload, unsigned int length) {
   }
 
   if (!doc["command"].isNull()) {
-    String command = doc["command"].as<String>();
+    auto command = doc["command"].as<String>();
     Serial.print("Command: ");
     Serial.println(command);
 
@@ -112,7 +112,7 @@ void commandHandler(char* topic, byte* payload, unsigned int length) {
       }
     } else if (command == "set_humidity") {
       if (!doc["humidity"].isNull()) {
-        int humidity = doc["humidity"].as<int>();
+        const int humidity = doc["humidity"].as<int>();
         Serial.print("Setting humidity to ");
         Serial.print(humidity);
         Serial.println(" %.");
@@ -160,7 +160,7 @@ void connectToMQTT() {
 }
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   Serial.println("\n\n");
   Serial.println("             ____");
